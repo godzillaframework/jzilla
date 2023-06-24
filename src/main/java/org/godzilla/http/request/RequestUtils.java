@@ -1,13 +1,14 @@
 package org.godzilla.http.request;
 
-import com.sun.net.httpserver.Headers;
 import org.godzilla.http.Cookie;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.List;
+import com.sun.net.httpserver.Headers;
 
 final class RequestUtils {
+
     private RequestUtils() {}
 
     static HashMap<String, Cookie> parseCookies(Headers headers) {
@@ -33,7 +34,7 @@ final class RequestUtils {
                 key.setLength(0);
                 val.setLength(0);
                 swap = false;
-            } else if(swap) {
+            } else if (swap) {
                 val.append(c);
             } else {
                 key.append(c);
@@ -47,4 +48,47 @@ final class RequestUtils {
 
         return cookieList;
     }
+
+    static HashMap<String, String> parseRawQuery(String rawQuery) {
+        HashMap<String, String> querys = new HashMap<>();
+
+        if (rawQuery == null) {
+            return querys;
+        }
+
+        StringBuilder key = new StringBuilder();
+        StringBuilder val = new StringBuilder();
+        char[] chars = rawQuery.toCharArray();
+        boolean keyac = false;
+        char c = '=';
+
+        for (char cc : chars) {
+            c = cc;
+
+            if (c == '=') {
+                keyac = true;
+            } else if (c == '&') {
+
+                try {
+                    querys.put(URLDecoder.decode(key.toString(), "UTF-8"), URLDecoder.decode(val.toString(), "UTF8"));
+                } catch (UnsupportedEncodingException ignored) {
+                }
+
+                key.setLength(0);
+                val.setLength(0);
+                keyac = false;
+            } else if (keyac) {
+                val.append(c);
+            } else {
+                key.append(c);
+            }
+        }
+
+        if (c != '=' && c != '&') {
+            querys.put(key.toString(), val.toString());
+        }
+
+        return querys;
+    }
+
 }
